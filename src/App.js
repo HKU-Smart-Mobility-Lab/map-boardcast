@@ -1,4 +1,5 @@
 import Map from "./pages/Map";
+import "./App.css";
 
 function App() {
   return <Map />;
