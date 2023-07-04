@@ -3,17 +3,25 @@
 import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 import passengers from "../data/passengers";
+import * as turf from "@turf/turf";
+import { AiFillCar } from "react-icons/ai";
 
 mapboxgl.accessToken =
   "pk.eyJ1IjoibWF0dGp3YW5nIiwiYSI6ImNsaXB5NDN1cTAzMnAza28xaG54ZWRrMzgifQ.cUju1vqjuW7XmAuO2iEZmg";
 
 let man;
+let car;
 
 function loadImage() {
   man = new Image();
+  car = new Image();
   man.src = "/static/man.png";
+  car.src = "/static/car.png";
   man.onload = () => {
-    console.log("loaded");
+    console.log("man loaded");
+  };
+  car.onload = () => {
+    console.log("car loaded");
   };
 }
 
@@ -184,6 +192,31 @@ export default function Map() {
         },
       ],
     };
+
+    var point = {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: {},
+          geometry: {
+            type: "Point",
+            coordinates: [114.1704, 22.3233],
+          },
+        },
+      ],
+    };
+
+    var lineDistance = turf.lineDistance(route.features[0], "kilometers");
+    var arc = [];
+    var steps = 1000;
+    for (var i = 0; i < lineDistance; i += lineDistance / steps) {
+      var segment = turf.along(route.features[0], i, "kilometers");
+      arc.push(segment.geometry.coordinates);
+    }
+    route.features[0].geometry.coordinates = arc;
+    var counter = 0;
+
     map.current.addSource("route", {
       type: "geojson",
       data: route,
@@ -197,12 +230,57 @@ export default function Map() {
         "line-color": "#007cbf",
       },
     });
+
+    map.current.addSource("car", {
+      type: "geojson",
+      data: point,
+    });
+
+    map.current.addImage("car-15", car, { pixelRatio: 2 });
+
+    map.current.addLayer({
+      id: "carRoute",
+      source: "car",
+      type: "symbol",
+      layout: {
+        "icon-image": "car-15",
+        "icon-rotate": ["get", "bearing"],
+        "icon-rotation-alignment": "map",
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true,
+      },
+    });
+
+    function animate() {
+      point.features[0].geometry.coordinates =
+        route.features[0].geometry.coordinates[counter];
+
+      point.features[0].properties.bearing = turf.bearing(
+        turf.point(
+          route.features[0].geometry.coordinates[
+            counter >= steps ? counter - 1 : counter
+          ]
+        ),
+        turf.point(
+          route.features[0].geometry.coordinates[
+            counter >= steps ? counter : counter + 1
+          ]
+        )
+      );
+
+      map.current.getSource("car").setData(point);
+      if (counter < steps) {
+        requestAnimationFrame(animate);
+      }
+      counter = counter + 1;
+      console.log(counter);
+    }
+    animate(counter);
   };
 
   useEffect(() => {
     map.current.on("load", () => {
       addedPassengers();
-
       addCars();
     });
   }, []);
