@@ -4,7 +4,7 @@ import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 import passengers from "../data/passengers";
 import * as turf from "@turf/turf";
-import { AiFillCar } from "react-icons/ai";
+import { drivers } from "../data/drivers";
 
 mapboxgl.accessToken =
   "pk.eyJ1IjoibWF0dGp3YW5nIiwiYSI6ImNsaXB5NDN1cTAzMnAza28xaG54ZWRrMzgifQ.cUju1vqjuW7XmAuO2iEZmg";
@@ -165,29 +165,7 @@ export default function Map() {
           type: "Feature",
           geometry: {
             type: "LineString",
-            coordinates: [
-              [114.1704, 22.3233],
-              [114.1694, 22.3193],
-              [114.1685, 22.3188],
-              [114.1683, 22.3173],
-              [114.1672, 22.3165],
-              [114.1665, 22.3159],
-              [114.1657, 22.3152],
-              [114.165, 22.3144],
-              [114.1643, 22.3137],
-              [114.1637, 22.3129],
-              [114.163, 22.3122],
-              [114.1624, 22.3115],
-              [114.1617, 22.3108],
-              [114.1611, 22.3101],
-              [114.1605, 22.3093],
-              [114.1599, 22.3086],
-              [114.1593, 22.3079],
-              [114.1587, 22.3072],
-              [114.1581, 22.3065],
-              [114.1575, 22.3058],
-              [114.1569, 22.3051],
-            ],
+            coordinates: drivers[0].route,
           },
         },
       ],
