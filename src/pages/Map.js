@@ -5,27 +5,16 @@ import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-load
 import passengers from "../data/passengers";
 import * as turf from "@turf/turf";
 import { drivers } from "../data/drivers";
+import { importImage } from "../images/images";
 
 mapboxgl.accessToken =
   "pk.eyJ1IjoibWF0dGp3YW5nIiwiYSI6ImNsaXB5NDN1cTAzMnAza28xaG54ZWRrMzgifQ.cUju1vqjuW7XmAuO2iEZmg";
 
-let man;
-let car;
+const man = importImage("man");
+const car = importImage("car");
+const frameRate = 60;
+const frameInterval = 1000 / frameRate;
 
-function loadImage() {
-  man = new Image();
-  car = new Image();
-  man.src = "/static/man.png";
-  car.src = "/static/car.png";
-  man.onload = () => {
-    console.log("man loaded");
-  };
-  car.onload = () => {
-    console.log("car loaded");
-  };
-}
-
-loadImage();
 const createPulsingDot = (size, map) => {
   return {
     width: size,
@@ -83,7 +72,6 @@ export default function Map() {
   useEffect(() => {
     // Map set up
     if (map.current) return;
-    loadImage();
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/dark-v11",
@@ -251,7 +239,6 @@ export default function Map() {
         requestAnimationFrame(animate);
       }
       counter = counter + 1;
-      console.log(counter);
     }
     animate(counter);
   };
