@@ -6,9 +6,10 @@ import passengers from "../data/passengers";
 import * as turf from "@turf/turf";
 import { drivers } from "../data/drivers";
 import { importImage } from "../images/images";
+import { appConfig } from "../config";
+import { segmentMultiLineString } from "../utils/calculate";
 
-mapboxgl.accessToken =
-  "pk.eyJ1IjoibWF0dGp3YW5nIiwiYSI6ImNsaXB5NDN1cTAzMnAza28xaG54ZWRrMzgifQ.cUju1vqjuW7XmAuO2iEZmg";
+mapboxgl.accessToken = appConfig.mapboxToken;
 
 const man = importImage("man");
 const car = importImage("car");
@@ -69,8 +70,8 @@ export default function Map() {
   const [lat, setLat] = useState(22.3193);
   const [zoom, setZoom] = useState(15);
 
+  // Map set up
   useEffect(() => {
-    // Map set up
     if (map.current) return;
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -173,13 +174,10 @@ export default function Map() {
       ],
     };
 
-    var lineDistance = turf.lineDistance(route.features[0], "kilometers");
-    var arc = [];
-    var steps = 1000;
-    for (var i = 0; i < lineDistance; i += lineDistance / steps) {
-      var segment = turf.along(route.features[0], i, "kilometers");
-      arc.push(segment.geometry.coordinates);
-    }
+    var { arc, totalSteps } = segmentMultiLineString(
+      route.features[0].geometry.coordinates
+    );
+
     route.features[0].geometry.coordinates = arc;
     var counter = 0;
 
@@ -224,18 +222,18 @@ export default function Map() {
       point.features[0].properties.bearing = turf.bearing(
         turf.point(
           route.features[0].geometry.coordinates[
-            counter >= steps ? counter - 1 : counter
+            counter >= totalSteps ? counter - 1 : counter
           ]
         ),
         turf.point(
           route.features[0].geometry.coordinates[
-            counter >= steps ? counter : counter + 1
+            counter >= totalSteps ? counter : counter + 1
           ]
         )
       );
 
       map.current.getSource("car").setData(point);
-      if (counter < steps) {
+      if (counter < totalSteps) {
         requestAnimationFrame(animate);
       }
       counter = counter + 1;
