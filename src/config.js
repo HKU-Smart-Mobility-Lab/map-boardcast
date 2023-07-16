@@ -4,5 +4,5 @@ export const appConfig = {
 };
 
 export const mapConfig = {
-  carMovingStepsPerTimeInterval: 30,
+  carMovingStepsPerTimeInterval: 20,
 };

@@ -185,7 +185,18 @@ export default function Map() {
     );
 
     route.features[0].geometry.coordinates = arc;
-    const route2 = route;
+    const route2 = {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: Array.from(arc).reverse(),
+          },
+        },
+      ],
+    };
     var counter = 0;
 
     map.current.addSource("route2", {
@@ -241,7 +252,7 @@ export default function Map() {
       );
 
       map.current.getSource("car").setData(point);
-      route2.features[0].geometry.coordinates.shift();
+      route2.features[0].geometry.coordinates.pop();
       map.current.getSource("route2").setData(route2);
       if (counter < totalSteps) {
         requestAnimationFrame(animate);
