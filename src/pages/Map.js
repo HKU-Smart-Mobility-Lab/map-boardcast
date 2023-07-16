@@ -143,6 +143,12 @@ export default function Map() {
           tooltip.classList.add("hidden");
         }
       });
+
+      if (passenger.pickedUpTime > 0) {
+        setTimeout(() => {
+          map.current.removeLayer(layerName);
+        }, passenger.pickedUpTime);
+      }
     }
   };
 
@@ -179,15 +185,17 @@ export default function Map() {
     );
 
     route.features[0].geometry.coordinates = arc;
+    const route2 = route;
     var counter = 0;
 
-    map.current.addSource("route", {
+    map.current.addSource("route2", {
       type: "geojson",
-      data: route,
+      data: route2,
     });
+
     map.current.addLayer({
-      id: "route",
-      source: "route",
+      id: "route2",
+      source: "route2",
       type: "line",
       paint: {
         "line-width": 2,
@@ -233,6 +241,8 @@ export default function Map() {
       );
 
       map.current.getSource("car").setData(point);
+      route2.features[0].geometry.coordinates.shift();
+      map.current.getSource("route2").setData(route2);
       if (counter < totalSteps) {
         requestAnimationFrame(animate);
       }
