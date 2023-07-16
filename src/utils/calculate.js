@@ -24,5 +24,5 @@ export function segmentMultiLineString(multiLineString) {
   }
   arc.push(multiLineString[multiLineString.length - 1]);
   console.log(arc);
-  return { arc, totalSteps: arc.length };
+  return { arc, totalSteps: arc.length - 1 };
 }
