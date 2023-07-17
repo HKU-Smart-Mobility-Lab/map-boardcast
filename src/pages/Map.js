@@ -8,59 +8,13 @@ import { drivers } from "../data/drivers";
 import { importImage } from "../images/images";
 import { appConfig } from "../config";
 import { segmentMultiLineString } from "../utils/calculate";
+import { createPulsingDot } from "../utils/layers";
 
 mapboxgl.accessToken = appConfig.mapboxToken;
 
-const man = importImage("man");
-const car = importImage("car");
-const frameRate = 60;
-const frameInterval = 1000 / frameRate;
-
-const createPulsingDot = (size, map) => {
-  return {
-    width: size,
-    height: size,
-    data: new Uint8Array(size * size * 4),
-
-    onAdd: function () {
-      const canvas = document.createElement("canvas");
-      canvas.width = this.width;
-      canvas.height = this.height;
-      this.context = canvas.getContext("2d");
-    },
-
-    render: function () {
-      const duration = 1000;
-      const t = (performance.now() % duration) / duration;
-
-      const radius = (size / 2) * 0.3;
-      const outerRadius = (size / 2) * 0.7 * t + radius;
-      const context = this.context;
-
-      context.clearRect(0, 0, this.width, this.height);
-
-      if (man.complete) {
-        const imgWidth = 50;
-        const imgHeight = 50;
-        const imgPosX = (this.width - imgWidth) / 2;
-        const imgPosY = (this.height - imgHeight) / 2;
-        context.drawImage(man, imgPosX, imgPosY, imgWidth, imgHeight);
-      }
-
-      context.beginPath();
-      context.arc(this.width / 2, this.height / 2, outerRadius, 0, Math.PI * 2);
-      context.fillStyle = `rgba(255, 200, 200, ${1 - t})`;
-      context.fill();
-
-      // Update this image's data with data from the canvas.
-      this.data = context.getImageData(0, 0, this.width, this.height).data;
-      map.triggerRepaint();
-
-      // Return `true` to let the map know that the image was updated.
-      return true;
-    },
-  };
-};
+const carYellow = importImage("car-yellow");
+const carRed = importImage("car-red");
+const carGreen = importImage("car-green");
 
 export default function Map() {
   const mapContainer = useRef(null);
@@ -79,7 +33,7 @@ export default function Map() {
       center: [lng, lat],
       zoom: zoom,
     });
-    map.current.scrollZoom.disable();
+    // map.current.scrollZoom.disable();
   });
 
   useEffect(() => {
@@ -117,6 +71,7 @@ export default function Map() {
           ],
         },
       });
+
       map.current.addLayer({
         id: layerName,
         type: "symbol",
@@ -125,6 +80,7 @@ export default function Map() {
           "icon-image": imageName,
         },
       });
+
       map.current.on("mouseenter", layerName, function (e) {
         const tooltip = tooltipRef.current;
 
@@ -214,19 +170,29 @@ export default function Map() {
       },
     });
 
-    map.current.addSource("car", {
+    map.current.addSource("carYellow", {
+      type: "geojson",
+      data: point,
+    });
+    map.current.addSource("carRed", {
+      type: "geojson",
+      data: point,
+    });
+    map.current.addSource("carGreen", {
       type: "geojson",
       data: point,
     });
 
-    map.current.addImage("car-15", car, { pixelRatio: 2 });
+    map.current.addImage("carYellow", carYellow, { pixelRatio: 2 });
+    map.current.addImage("carGreen", carGreen, { pixelRatio: 2 });
+    map.current.addImage("carRed", carRed, { pixelRatio: 2 });
 
     map.current.addLayer({
       id: "carRoute",
-      source: "car",
+      source: "carYellow",
       type: "symbol",
       layout: {
-        "icon-image": "car-15",
+        "icon-image": "carYellow",
         "icon-rotate": ["get", "bearing"],
         "icon-rotation-alignment": "map",
         "icon-allow-overlap": true,
@@ -251,7 +217,7 @@ export default function Map() {
         )
       );
 
-      map.current.getSource("car").setData(point);
+      map.current.getSource("carYellow").setData(point);
       route2.features[0].geometry.coordinates.pop();
       map.current.getSource("route2").setData(route2);
       if (counter < totalSteps) {
