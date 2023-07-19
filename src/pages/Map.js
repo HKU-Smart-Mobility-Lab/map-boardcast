@@ -109,127 +109,125 @@ export default function Map() {
   };
 
   const addCars = () => {
-    const route = {
-      type: "FeatureCollection",
-      features: [
-        {
-          type: "Feature",
-          geometry: {
-            type: "LineString",
-            coordinates: drivers[0].route,
+    for (const driver of drivers) {
+      const originalCoordinates = driver.route[0];
+      const carSourceName = `car-source-${driver.id}`;
+      const carLayerName = `car-layer-${driver.id}`;
+      const carPickUpRouteLayerName = `pick-up-route-layer-${driver.id}`;
+      const carPickUpRouteSourceName = `pick-up-route-${driver.id}`;
+      const route = {
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            geometry: {
+              type: "LineString",
+              coordinates: driver.route,
+            },
           },
-        },
-      ],
-    };
+        ],
+      };
 
-    var point = {
-      type: "FeatureCollection",
-      features: [
-        {
-          type: "Feature",
-          properties: {},
-          geometry: {
-            type: "Point",
-            coordinates: [114.1704, 22.3233],
+      var point = {
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            properties: {},
+            geometry: {
+              type: "Point",
+              coordinates: originalCoordinates,
+            },
           },
-        },
-      ],
-    };
+        ],
+      };
 
-    var { arc, totalSteps } = segmentMultiLineString(
-      route.features[0].geometry.coordinates
-    );
-
-    route.features[0].geometry.coordinates = arc;
-    const route2 = {
-      type: "FeatureCollection",
-      features: [
-        {
-          type: "Feature",
-          geometry: {
-            type: "LineString",
-            coordinates: Array.from(arc).reverse(),
-          },
-        },
-      ],
-    };
-    var counter = 0;
-
-    map.current.addSource("route2", {
-      type: "geojson",
-      data: route2,
-    });
-
-    map.current.addLayer({
-      id: "route2",
-      source: "route2",
-      type: "line",
-      paint: {
-        "line-width": 2,
-        "line-color": "#007cbf",
-      },
-    });
-
-    map.current.addSource("carYellow", {
-      type: "geojson",
-      data: point,
-    });
-    map.current.addSource("carRed", {
-      type: "geojson",
-      data: point,
-    });
-    map.current.addSource("carGreen", {
-      type: "geojson",
-      data: point,
-    });
-
-    map.current.addImage("carYellow", carYellow, { pixelRatio: 2 });
-    map.current.addImage("carGreen", carGreen, { pixelRatio: 2 });
-    map.current.addImage("carRed", carRed, { pixelRatio: 2 });
-
-    map.current.addLayer({
-      id: "carRoute",
-      source: "carYellow",
-      type: "symbol",
-      layout: {
-        "icon-image": "carYellow",
-        "icon-rotate": ["get", "bearing"],
-        "icon-rotation-alignment": "map",
-        "icon-allow-overlap": true,
-        "icon-ignore-placement": true,
-      },
-    });
-
-    function animate() {
-      point.features[0].geometry.coordinates =
-        route.features[0].geometry.coordinates[counter];
-
-      point.features[0].properties.bearing = turf.bearing(
-        turf.point(
-          route.features[0].geometry.coordinates[
-            counter >= totalSteps ? counter - 1 : counter
-          ]
-        ),
-        turf.point(
-          route.features[0].geometry.coordinates[
-            counter >= totalSteps ? counter : counter + 1
-          ]
-        )
+      var { arc, totalSteps } = segmentMultiLineString(
+        route.features[0].geometry.coordinates
       );
 
-      map.current.getSource("carYellow").setData(point);
-      route2.features[0].geometry.coordinates.pop();
-      map.current.getSource("route2").setData(route2);
-      if (counter < totalSteps) {
-        requestAnimationFrame(animate);
+      route.features[0].geometry.coordinates = arc;
+      const pickUpRoute = {
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            geometry: {
+              type: "LineString",
+              coordinates: Array.from(arc).reverse(),
+            },
+          },
+        ],
+      };
+      var counter = 0;
+
+      map.current.addSource(carPickUpRouteSourceName, {
+        type: "geojson",
+        data: pickUpRoute,
+      });
+
+      map.current.addLayer({
+        id: carPickUpRouteLayerName,
+        source: carPickUpRouteSourceName,
+        type: "line",
+        paint: {
+          "line-width": 2,
+          "line-color": "#007cbf",
+        },
+      });
+
+      map.current.addSource(carSourceName, {
+        type: "geojson",
+        data: point,
+      });
+
+      map.current.addLayer({
+        id: carLayerName,
+        source: carSourceName,
+        type: "symbol",
+        layout: {
+          "icon-image": "carYellow",
+          "icon-rotate": ["get", "bearing"],
+          "icon-rotation-alignment": "map",
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true,
+        },
+      });
+
+      function animate() {
+        point.features[0].geometry.coordinates =
+          route.features[0].geometry.coordinates[counter];
+
+        point.features[0].properties.bearing = turf.bearing(
+          turf.point(
+            route.features[0].geometry.coordinates[
+              counter >= totalSteps ? counter - 1 : counter
+            ]
+          ),
+          turf.point(
+            route.features[0].geometry.coordinates[
+              counter >= totalSteps ? counter : counter + 1
+            ]
+          )
+        );
+
+        map.current.getSource(carSourceName).setData(point);
+        pickUpRoute.features[0].geometry.coordinates.pop();
+        map.current.getSource(carPickUpRouteSourceName).setData(pickUpRoute);
+        if (counter < totalSteps) {
+          requestAnimationFrame(animate);
+        }
+        counter = counter + 1;
       }
-      counter = counter + 1;
+      animate(counter);
     }
-    animate(counter);
   };
 
   useEffect(() => {
     map.current.on("load", () => {
+      map.current.addImage("carYellow", carYellow, { pixelRatio: 2 });
+      map.current.addImage("carGreen", carGreen, { pixelRatio: 2 });
+      map.current.addImage("carRed", carRed, { pixelRatio: 2 });
       addedPassengers();
       addCars();
     });
