@@ -9,7 +9,8 @@ import { drivers } from "../data/drivers";
 import { importImage } from "../images/images";
 import { appConfig, mapConfig } from "../config";
 import { segmentMultiLineString } from "../utils/calculate";
-import { createPulsingDot } from "../utils/layers";
+import { createPulsingDot, pickUpPassenger } from "../utils/layers";
+import { passengerNaming } from "../utils/naming";
 
 mapboxgl.accessToken = appConfig.mapboxToken;
 
@@ -48,9 +49,9 @@ export default function Map() {
 
   const addedPassengers = () => {
     for (const passenger of passengers) {
-      const imageName = `pulsing-dot-${passenger.id}`;
-      const sourceName = `dot-dot-${passenger.id}`;
-      const layerName = `layer-${passenger.id}`;
+      const { imageName, sourceName, layerName } = passengerNaming(
+        passenger.id
+      );
       map.current.addImage(
         imageName,
         createPulsingDot(passenger.range, map.current),
@@ -100,12 +101,6 @@ export default function Map() {
           tooltip.classList.add("hidden");
         }
       });
-
-      if (passenger.pickedUpTime > 0) {
-        setTimeout(() => {
-          map.current.removeLayer(layerName);
-        }, passenger.pickedUpTime);
-      }
     }
   };
 
@@ -227,6 +222,14 @@ export default function Map() {
         map.current.getSource(`car-source-${i}`).setData(points[i]);
         pickUpRoutes[i].features[0].geometry.coordinates.pop();
         map.current.getSource(`pick-up-route-${i}`).setData(pickUpRoutes[i]);
+        console.log(counter, 17 * mapConfig.carMovingStepsPerTimeInterval);
+        if (
+          i === 0 &&
+          counter === 17 * mapConfig.carMovingStepsPerTimeInterval
+        ) {
+          console.log(map.current, drivers[i].actions["17"]?.passenger, i);
+          pickUpPassenger(map.current, drivers[i].actions["17"]?.passenger, i);
+        }
       }
       if (counter < totalSteps - 1) {
         requestAnimationFrame(animate);

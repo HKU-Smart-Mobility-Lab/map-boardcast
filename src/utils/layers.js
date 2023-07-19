@@ -1,4 +1,5 @@
 import { importImage } from "../images/images";
+import { passengerNaming } from "./naming";
 
 const man = importImage("man");
 
@@ -46,4 +47,10 @@ export const createPulsingDot = (size, map) => {
       return true;
     },
   };
+};
+
+export const pickUpPassenger = (map, passengerId, driverId) => {
+  const passengerLayerName = passengerNaming(passengerId).layerName;
+  map.removeLayer(passengerLayerName);
+  map.setLayoutProperty(`car-layer-${driverId}`, "icon-image", "carRed");
 };

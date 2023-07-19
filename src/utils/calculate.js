@@ -25,3 +25,10 @@ export function segmentMultiLineString(multiLineString) {
   arc.push(multiLineString[multiLineString.length - 1]);
   return { arc, totalSteps: arc.length - 1 };
 }
+
+export function showCurrentLayers(map) {
+  var layers = map.getStyle().layers;
+  for (var i = 0; i < layers.length; i++) {
+    console.log(layers[i].id);
+  }
+}
