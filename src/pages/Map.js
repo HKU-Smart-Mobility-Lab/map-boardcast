@@ -2,11 +2,12 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
+import "mapbox-gl/dist/mapbox-gl.css";
 import passengers from "../data/passengers";
 import * as turf from "@turf/turf";
 import { drivers } from "../data/drivers";
 import { importImage } from "../images/images";
-import { appConfig } from "../config";
+import { appConfig, mapConfig } from "../config";
 import { segmentMultiLineString } from "../utils/calculate";
 import { createPulsingDot } from "../utils/layers";
 
@@ -109,13 +110,21 @@ export default function Map() {
   };
 
   const addCars = () => {
-    for (const driver of drivers) {
+    const routes = [];
+    const points = [];
+    const arcs = [];
+    const pickUpRoutes = [];
+    let totalSteps =
+      (drivers[0].route.length - 1) * mapConfig.carMovingStepsPerTimeInterval;
+
+    for (let i = 0; i < drivers.length; i++) {
+      const driver = drivers[i];
       const originalCoordinates = driver.route[0];
       const carSourceName = `car-source-${driver.id}`;
       const carLayerName = `car-layer-${driver.id}`;
       const carPickUpRouteLayerName = `pick-up-route-layer-${driver.id}`;
       const carPickUpRouteSourceName = `pick-up-route-${driver.id}`;
-      const route = {
+      routes.push({
         type: "FeatureCollection",
         features: [
           {
@@ -126,9 +135,9 @@ export default function Map() {
             },
           },
         ],
-      };
+      });
 
-      var point = {
+      points.push({
         type: "FeatureCollection",
         features: [
           {
@@ -140,14 +149,16 @@ export default function Map() {
             },
           },
         ],
-      };
+      });
 
-      var { arc, totalSteps } = segmentMultiLineString(
-        route.features[0].geometry.coordinates
+      let { arc } = segmentMultiLineString(
+        routes[i].features[0].geometry.coordinates
       );
 
-      route.features[0].geometry.coordinates = arc;
-      const pickUpRoute = {
+      arcs.push(Array.from(arc));
+
+      routes[i].features[0].geometry.coordinates = Array.from(arc);
+      pickUpRoutes.push({
         type: "FeatureCollection",
         features: [
           {
@@ -158,12 +169,11 @@ export default function Map() {
             },
           },
         ],
-      };
-      var counter = 0;
+      });
 
       map.current.addSource(carPickUpRouteSourceName, {
         type: "geojson",
-        data: pickUpRoute,
+        data: pickUpRoutes[i],
       });
 
       map.current.addLayer({
@@ -178,7 +188,7 @@ export default function Map() {
 
       map.current.addSource(carSourceName, {
         type: "geojson",
-        data: point,
+        data: points[i],
       });
 
       map.current.addLayer({
@@ -193,34 +203,37 @@ export default function Map() {
           "icon-ignore-placement": true,
         },
       });
+    }
+    var counter = 0;
 
-      function animate() {
-        point.features[0].geometry.coordinates =
-          route.features[0].geometry.coordinates[counter];
+    function animate() {
+      for (let i = 0; i < drivers.length; i++) {
+        points[i].features[0].geometry.coordinates =
+          routes[i].features[0].geometry.coordinates[counter];
 
-        point.features[0].properties.bearing = turf.bearing(
+        points[i].features[0].properties.bearing = turf.bearing(
           turf.point(
-            route.features[0].geometry.coordinates[
+            routes[i].features[0].geometry.coordinates[
               counter >= totalSteps ? counter - 1 : counter
             ]
           ),
           turf.point(
-            route.features[0].geometry.coordinates[
+            routes[i].features[0].geometry.coordinates[
               counter >= totalSteps ? counter : counter + 1
             ]
           )
         );
 
-        map.current.getSource(carSourceName).setData(point);
-        pickUpRoute.features[0].geometry.coordinates.pop();
-        map.current.getSource(carPickUpRouteSourceName).setData(pickUpRoute);
-        if (counter < totalSteps) {
-          requestAnimationFrame(animate);
-        }
-        counter = counter + 1;
+        map.current.getSource(`car-source-${i}`).setData(points[i]);
+        pickUpRoutes[i].features[0].geometry.coordinates.pop();
+        map.current.getSource(`pick-up-route-${i}`).setData(pickUpRoutes[i]);
       }
-      animate(counter);
+      if (counter < totalSteps - 1) {
+        requestAnimationFrame(animate);
+      }
+      counter = counter + 1;
     }
+    animate(counter);
   };
 
   useEffect(() => {
