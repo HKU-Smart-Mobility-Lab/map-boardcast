@@ -11,6 +11,8 @@ import { appConfig, mapConfig } from "../config";
 import { segmentMultiLineString } from "../utils/calculate";
 import { createPulsingDot, pickUpPassenger } from "../utils/layers";
 import { passengerNaming } from "../utils/naming";
+import { mapActions } from "../data/actions";
+import { actionsHandling } from "../utils/actionsHandling";
 
 mapboxgl.accessToken = appConfig.mapboxToken;
 
@@ -25,6 +27,12 @@ export default function Map() {
   const [lng, setLng] = useState(114.1694);
   const [lat, setLat] = useState(22.3193);
   const [zoom, setZoom] = useState(15);
+  const routes = [];
+  const points = [];
+  const arcs = [];
+  const pickUpRoutes = [];
+  let totalSteps =
+    (drivers[0].route.length - 1) * mapConfig.carMovingStepsPerTimeInterval;
 
   // Map set up
   useEffect(() => {
@@ -47,71 +55,7 @@ export default function Map() {
     });
   });
 
-  const addedPassengers = () => {
-    for (const passenger of passengers) {
-      const { imageName, sourceName, layerName } = passengerNaming(
-        passenger.id
-      );
-      map.current.addImage(
-        imageName,
-        createPulsingDot(passenger.range, map.current),
-        { pixelRatio: 2 }
-      );
-
-      map.current.addSource(sourceName, {
-        type: "geojson",
-        data: {
-          type: "FeatureCollection",
-          features: [
-            {
-              type: "Feature",
-              geometry: {
-                type: "Point",
-                coordinates: [passenger.lng, passenger.lat], // icon position [lng, lat]
-              },
-            },
-          ],
-        },
-      });
-
-      map.current.addLayer({
-        id: layerName,
-        type: "symbol",
-        source: sourceName,
-        layout: {
-          "icon-image": imageName,
-        },
-      });
-
-      map.current.on("mouseenter", layerName, function (e) {
-        const tooltip = tooltipRef.current;
-
-        if (tooltip) {
-          tooltip.classList.remove("hidden");
-          tooltip.style.left = `${e.originalEvent.pageX}px`;
-          tooltip.style.top = `${e.originalEvent.pageY}px`;
-          tooltip.innerHTML = `ID: ${passenger.id}<br>Range: ${passenger.range}<br>Name: ${passenger.name}`;
-        }
-      });
-
-      // Hide the tooltip when the mouse leaves the man image
-      map.current.on("mouseleave", layerName, function () {
-        const tooltip = tooltipRef.current;
-        if (tooltip) {
-          tooltip.classList.add("hidden");
-        }
-      });
-    }
-  };
-
   const addCars = () => {
-    const routes = [];
-    const points = [];
-    const arcs = [];
-    const pickUpRoutes = [];
-    let totalSteps =
-      (drivers[0].route.length - 1) * mapConfig.carMovingStepsPerTimeInterval;
-
     for (let i = 0; i < drivers.length; i++) {
       const driver = drivers[i];
       const originalCoordinates = driver.route[0];
@@ -199,44 +143,6 @@ export default function Map() {
         },
       });
     }
-    var counter = 0;
-
-    function animate() {
-      for (let i = 0; i < drivers.length; i++) {
-        points[i].features[0].geometry.coordinates =
-          routes[i].features[0].geometry.coordinates[counter];
-
-        points[i].features[0].properties.bearing = turf.bearing(
-          turf.point(
-            routes[i].features[0].geometry.coordinates[
-              counter >= totalSteps ? counter - 1 : counter
-            ]
-          ),
-          turf.point(
-            routes[i].features[0].geometry.coordinates[
-              counter >= totalSteps ? counter : counter + 1
-            ]
-          )
-        );
-
-        map.current.getSource(`car-source-${i}`).setData(points[i]);
-        pickUpRoutes[i].features[0].geometry.coordinates.pop();
-        map.current.getSource(`pick-up-route-${i}`).setData(pickUpRoutes[i]);
-        console.log(counter, 17 * mapConfig.carMovingStepsPerTimeInterval);
-        if (
-          i === 0 &&
-          counter === 17 * mapConfig.carMovingStepsPerTimeInterval
-        ) {
-          console.log(map.current, drivers[i].actions["17"]?.passenger, i);
-          pickUpPassenger(map.current, drivers[i].actions["17"]?.passenger, i);
-        }
-      }
-      if (counter < totalSteps - 1) {
-        requestAnimationFrame(animate);
-      }
-      counter = counter + 1;
-    }
-    animate(counter);
   };
 
   useEffect(() => {
@@ -244,8 +150,51 @@ export default function Map() {
       map.current.addImage("carYellow", carYellow, { pixelRatio: 2 });
       map.current.addImage("carGreen", carGreen, { pixelRatio: 2 });
       map.current.addImage("carRed", carRed, { pixelRatio: 2 });
-      addedPassengers();
       addCars();
+      console.log("Cars added");
+      var counter = 0;
+      function animate() {
+        for (let i = 0; i < drivers.length; i++) {
+          points[i].features[0].geometry.coordinates =
+            routes[i].features[0].geometry.coordinates[counter];
+
+          points[i].features[0].properties.bearing = turf.bearing(
+            turf.point(
+              routes[i].features[0].geometry.coordinates[
+                counter >= totalSteps ? counter - 1 : counter
+              ]
+            ),
+            turf.point(
+              routes[i].features[0].geometry.coordinates[
+                counter >= totalSteps ? counter : counter + 1
+              ]
+            )
+          );
+
+          map.current.getSource(`car-source-${i}`).setData(points[i]);
+          pickUpRoutes[i].features[0].geometry.coordinates.pop();
+          map.current.getSource(`pick-up-route-${i}`).setData(pickUpRoutes[i]);
+        }
+
+        const currentStep = Math.floor(
+          counter / mapConfig.carMovingStepsPerTimeInterval
+        );
+        if (counter % mapConfig.carMovingStepsPerTimeInterval === 0) {
+          console.log(currentStep);
+          if (mapActions[currentStep]) {
+            console.log(mapActions[currentStep]);
+            for (const action of mapActions[currentStep]) {
+              actionsHandling(map.current, action.actionType, action.data);
+            }
+          }
+        }
+
+        if (counter < totalSteps - 1) {
+          requestAnimationFrame(animate);
+        }
+        counter = counter + 1;
+      }
+      animate(counter);
     });
   }, []);
 
