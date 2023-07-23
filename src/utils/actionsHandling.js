@@ -9,6 +9,8 @@ export const actionsHandling = (map, actionType, data) => {
       passengerAppear(map, data);
       break;
     case ActionType.rangeUpdate:
+      console.log(actionType, data);
+      rangeUpdate(map, data);
       break;
     case ActionType.orderReceived:
       break;
@@ -24,7 +26,7 @@ export const actionsHandling = (map, actionType, data) => {
 };
 
 function passengerAppear(map, data) {
-  /** 
+  /*
    * data format: 
    * {
       passengerid: 1,
@@ -66,17 +68,38 @@ function passengerAppear(map, data) {
   });
 }
 
-const rangeUpdateAction = {
-  passengerid: 1,
-  passengerCoordinates: [114.1694, 22.3193],
-  newRange: 300,
-};
+function rangeUpdate(map, data) {
+  /*
+   * data format: 
+   * {
+      passengerid: 1,
+      passengerCoordinates: [114.1694, 22.3193],
+      newRange: 300,
+    };
+  */
+  const passengerLayerName = passengerNaming(data.passengerid).layerName;
+  map.removeLayer(passengerLayerName);
+  passengerAppear(map, data);
+}
 
 const orderReceivedAction = {
   passengerid: 1,
   driverid: 17,
   pickUpTime: 30,
 };
+
+function pickUp(map, data) {
+  /*
+   * data format: 
+   * {
+      passengerid: 1,
+      driverid: 17,
+    };
+  */
+  const passengerLayerName = passengerNaming(data.passengerid).layerName;
+  map.removeLayer(passengerLayerName);
+  map.setLayoutProperty(`car-layer-${data.driverid}`, "icon-image", "carRed");
+}
 
 const pickUpAction = {
   passengerid: 1,
@@ -90,23 +113,4 @@ const dropOffAction = {
 const cancelAction = {
   passengerid: 1,
   driverid: 17,
-};
-
-const actions = {
-  1: [
-    {
-      actionType: "rangeUpdate",
-      data: rangeUpdateAction,
-    },
-    {
-      actionType: "orderReceived",
-      data: orderReceivedAction,
-    },
-  ],
-  2: [
-    {
-      actionType: "pickUp",
-      data: pickUpAction,
-    },
-  ],
 };
