@@ -27,5 +27,21 @@ export const mapActions = {
         range: 200,
       },
     },
+    {
+      actionType: ActionType.orderReceived,
+      data: {
+        passengerid: 1,
+        driverid: 0,
+      },
+    },
+  ],
+  17: [
+    {
+      actionType: ActionType.pickUp,
+      data: {
+        passengerid: 1,
+        driverid: 0,
+      },
+    },
   ],
 };
