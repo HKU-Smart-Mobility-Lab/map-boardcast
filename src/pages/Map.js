@@ -3,16 +3,15 @@
 import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 import "mapbox-gl/dist/mapbox-gl.css";
-import passengers from "../data/passengers";
 import * as turf from "@turf/turf";
 import { drivers } from "../data/drivers";
 import { importImage } from "../images/images";
 import { appConfig, mapConfig } from "../config";
 import { segmentMultiLineString } from "../utils/calculate";
-import { createPulsingDot, pickUpPassenger } from "../utils/layers";
-import { passengerNaming } from "../utils/naming";
 import { mapActions } from "../data/actions";
 import { actionsHandling } from "../utils/actionsHandling";
+import { driverNaming } from "../utils/naming";
+import { DriverStatus } from "../utils/driversHandling";
 
 mapboxgl.accessToken = appConfig.mapboxToken;
 
@@ -59,10 +58,13 @@ export default function Map() {
     for (let i = 0; i < drivers.length; i++) {
       const driver = drivers[i];
       const originalCoordinates = driver.route[0];
-      const carSourceName = `car-source-${driver.id}`;
-      const carLayerName = `car-layer-${driver.id}`;
-      const carPickUpRouteLayerName = `pick-up-route-layer-${driver.id}`;
-      const carPickUpRouteSourceName = `pick-up-route-${driver.id}`;
+      const {
+        driverSourceName,
+        driverLayerName,
+        driverPickingUpRouteLayerName,
+        driverPickingUpRouteSourceName,
+      } = driverNaming(driver.id);
+
       routes.push({
         type: "FeatureCollection",
         features: [
@@ -110,14 +112,14 @@ export default function Map() {
         ],
       });
 
-      map.current.addSource(carPickUpRouteSourceName, {
+      map.current.addSource(driverPickingUpRouteSourceName, {
         type: "geojson",
         data: pickUpRoutes[i],
       });
 
       map.current.addLayer({
-        id: carPickUpRouteLayerName,
-        source: carPickUpRouteSourceName,
+        id: driverPickingUpRouteLayerName,
+        source: driverPickingUpRouteSourceName,
         type: "line",
         paint: {
           "line-width": 2,
@@ -125,17 +127,17 @@ export default function Map() {
         },
       });
 
-      map.current.addSource(carSourceName, {
+      map.current.addSource(driverSourceName, {
         type: "geojson",
         data: points[i],
       });
 
       map.current.addLayer({
-        id: carLayerName,
-        source: carSourceName,
+        id: driverLayerName,
+        source: driverSourceName,
         type: "symbol",
         layout: {
-          "icon-image": "carYellow",
+          "icon-image": DriverStatus.idle,
           "icon-rotate": ["get", "bearing"],
           "icon-rotation-alignment": "map",
           "icon-allow-overlap": true,
@@ -147,11 +149,14 @@ export default function Map() {
 
   useEffect(() => {
     map.current.on("load", () => {
-      map.current.addImage("carYellow", carYellow, { pixelRatio: 2 });
-      map.current.addImage("carGreen", carGreen, { pixelRatio: 2 });
-      map.current.addImage("carRed", carRed, { pixelRatio: 2 });
+      map.current.addImage(DriverStatus.drivingToPickup, carYellow, {
+        pixelRatio: 2,
+      });
+      map.current.addImage(DriverStatus.idle, carGreen, { pixelRatio: 2 });
+      map.current.addImage(DriverStatus.drivingToDropoff, carRed, {
+        pixelRatio: 2,
+      });
       addCars();
-      console.log("Cars added");
       var counter = 0;
       function animate() {
         for (let i = 0; i < drivers.length; i++) {
@@ -170,10 +175,14 @@ export default function Map() {
               ]
             )
           );
+          const { driverSourceName, driverPickingUpRouteSourceName } =
+            driverNaming(i);
 
-          map.current.getSource(`car-source-${i}`).setData(points[i]);
+          map.current.getSource(driverSourceName).setData(points[i]);
           pickUpRoutes[i].features[0].geometry.coordinates.pop();
-          map.current.getSource(`pick-up-route-${i}`).setData(pickUpRoutes[i]);
+          map.current
+            .getSource(driverPickingUpRouteSourceName)
+            .setData(pickUpRoutes[i]);
         }
 
         const currentStep = Math.floor(
@@ -196,7 +205,7 @@ export default function Map() {
       }
       animate(counter);
     });
-  }, []);
+  });
 
   return (
     <div className="w-screen h-screen">
