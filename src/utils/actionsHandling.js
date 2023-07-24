@@ -1,6 +1,7 @@
 import { ActionType } from "../data/actions";
-import { createPulsingDot } from "./layers";
+import { createPulsingDot } from "./passengersHandling";
 import { passengerNaming } from "./naming";
+import { DriverStatus, updateDriverStatus } from "./driversHandling";
 
 export const actionsHandling = (map, actionType, data) => {
   switch (actionType) {
@@ -13,10 +14,13 @@ export const actionsHandling = (map, actionType, data) => {
       rangeUpdate(map, data);
       break;
     case ActionType.orderReceived:
+      orderReceived(map, data);
       break;
     case ActionType.pickUp:
+      pickUp(map, data);
       break;
     case ActionType.dropOff:
+      dropOff(map, data);
       break;
     case ActionType.cancel:
       break;
@@ -82,12 +86,6 @@ function rangeUpdate(map, data) {
   passengerAppear(map, data);
 }
 
-const orderReceivedAction = {
-  passengerid: 1,
-  driverid: 17,
-  pickUpTime: 30,
-};
-
 function pickUp(map, data) {
   /*
    * data format: 
@@ -98,19 +96,32 @@ function pickUp(map, data) {
   */
   const passengerLayerName = passengerNaming(data.passengerid).layerName;
   map.removeLayer(passengerLayerName);
-  map.setLayoutProperty(`car-layer-${data.driverid}`, "icon-image", "carRed");
+  updateDriverStatus(map, data.driverid, DriverStatus.drivingToDropoff);
 }
 
-const pickUpAction = {
-  passengerid: 1,
-  driverid: 17,
-};
-
-const dropOffAction = {
-  driverid: 17,
-};
+function dropOff(map, data) {
+  /*
+   * data format: 
+   * {
+      driverid: 17,
+    };
+  */
+  updateDriverStatus(map, data.driverid, DriverStatus.idle);
+}
 
 const cancelAction = {
   passengerid: 1,
   driverid: 17,
 };
+
+function orderReceived(map, data) {
+  /*
+   * data format: 
+   * {
+      passengerid: 1,
+      driverid: 17,
+      pickUpTime: 30,
+    };
+  */
+  updateDriverStatus(map, data.driverid, DriverStatus.drivingToPickup);
+}
