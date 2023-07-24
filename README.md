@@ -1,8 +1,12 @@
 # Getting Started with this Project
 
+At the root path of the project,
+
+```npm install```
+then,
 ```npm start```
 
-### data formate
+### source data format
 ```js
 const passengerAppearAction = {
   passengerid: 1,
