@@ -1,8 +1,8 @@
-import Map from "./pages/Map";
+import MapGL from "./pages/Map";
 import "./App.css";
 
 function App() {
-  return <Map />;
+  return <MapGL />;
 }
 
 export default App;

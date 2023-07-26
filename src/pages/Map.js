@@ -4,11 +4,13 @@ import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 import "mapbox-gl/dist/mapbox-gl.css";
 import * as turf from "@turf/turf";
-import { drivers } from "../data/drivers";
+// import { drivers } from "../data/drivers";
+import { drivers } from "../data/driver_route";
 import { importImage } from "../images/images";
 import { appConfig, mapConfig } from "../config";
 import { segmentMultiLineString } from "../utils/calculate";
 import { mapActions } from "../data/actions";
+// import { actions as mapActions } from "../data/actions_list";
 import { actionsHandling } from "../utils/actionsHandling";
 import { driverNaming } from "../utils/naming";
 import { DriverStatus } from "../utils/driversHandling";
@@ -19,18 +21,16 @@ const carYellow = importImage("car-yellow");
 const carRed = importImage("car-red");
 const carGreen = importImage("car-green");
 
-export default function Map() {
+export default function MapGL() {
   const mapContainer = useRef(null);
   const tooltipRef = useRef(null);
   const map = useRef(null);
   const [lng, setLng] = useState(114.1694);
   const [lat, setLat] = useState(22.3193);
   const [zoom, setZoom] = useState(15);
-  const driversLocation = {};
-  const routes = [];
-  const points = [];
-  const arcs = [];
-  const pickUpRoutes = [];
+  const driverLocations = new Map();
+  const driverRoutes = new Map();
+  const pickUpRoutes = new Map();
   let totalSteps =
     (drivers[0].route.length - 1) * mapConfig.carMovingStepsPerTimeInterval;
 
@@ -66,7 +66,7 @@ export default function Map() {
         driverPickingUpRouteSourceName,
       } = driverNaming(driver.id);
 
-      routes.push({
+      driverRoutes[driver.id] = {
         type: "FeatureCollection",
         features: [
           {
@@ -77,9 +77,9 @@ export default function Map() {
             },
           },
         ],
-      });
+      };
 
-      driversLocation[driver.id] = {
+      driverLocations[driver.id] = {
         type: "FeatureCollection",
         features: [
           {
@@ -94,43 +94,14 @@ export default function Map() {
       };
 
       let { arc } = segmentMultiLineString(
-        routes[i].features[0].geometry.coordinates
+        driverRoutes[driver.id].features[0].geometry.coordinates
       );
-
-      arcs.push(Array.from(arc));
-
-      routes[i].features[0].geometry.coordinates = Array.from(arc);
-      pickUpRoutes.push({
-        type: "FeatureCollection",
-        features: [
-          {
-            type: "Feature",
-            geometry: {
-              type: "LineString",
-              coordinates: Array.from(arc).reverse(),
-            },
-          },
-        ],
-      });
-
-      map.current.addSource(driverPickingUpRouteSourceName, {
-        type: "geojson",
-        data: pickUpRoutes[i],
-      });
-
-      map.current.addLayer({
-        id: driverPickingUpRouteLayerName,
-        source: driverPickingUpRouteSourceName,
-        type: "line",
-        paint: {
-          "line-width": 2,
-          "line-color": "#007cbf",
-        },
-      });
+      driverRoutes[driver.id].features[0].geometry.coordinates =
+        Array.from(arc);
 
       map.current.addSource(driverSourceName, {
         type: "geojson",
-        data: driversLocation[driver.id],
+        data: driverLocations[driver.id],
       });
 
       map.current.addLayer({
@@ -162,32 +133,38 @@ export default function Map() {
       function animate() {
         for (let i = 0; i < drivers.length; i++) {
           const driver = drivers[i];
-          driversLocation[driver.id].features[0].geometry.coordinates =
-            routes[i].features[0].geometry.coordinates[counter];
+          driverLocations[driver.id].features[0].geometry.coordinates =
+            driverRoutes[driver.id].features[0].geometry.coordinates[counter];
 
-          driversLocation[driver.id].features[0].properties.bearing =
+          driverLocations[driver.id].features[0].properties.bearing =
             turf.bearing(
               turf.point(
-                routes[i].features[0].geometry.coordinates[
+                driverRoutes[driver.id].features[0].geometry.coordinates[
                   counter >= totalSteps ? counter - 1 : counter
                 ]
               ),
               turf.point(
-                routes[i].features[0].geometry.coordinates[
+                driverRoutes[driver.id].features[0].geometry.coordinates[
                   counter >= totalSteps ? counter : counter + 1
                 ]
               )
             );
           const { driverSourceName, driverPickingUpRouteSourceName } =
-            driverNaming(i);
+            driverNaming(driver.id);
 
           map.current
             .getSource(driverSourceName)
-            .setData(driversLocation[driver.id]);
-          pickUpRoutes[i].features[0].geometry.coordinates.pop();
-          map.current
-            .getSource(driverPickingUpRouteSourceName)
-            .setData(pickUpRoutes[i]);
+            .setData(driverLocations[driver.id]);
+
+          if (map.current.getSource(driverPickingUpRouteSourceName)) {
+            var currentData = map.current.getSource(
+              driverPickingUpRouteSourceName
+            )._data;
+            currentData.features[0].geometry.coordinates.pop();
+            map.current
+              .getSource(driverPickingUpRouteSourceName)
+              .setData(currentData);
+          }
         }
 
         const currentStep = Math.floor(
@@ -195,12 +172,18 @@ export default function Map() {
         );
         if (counter % mapConfig.carMovingStepsPerTimeInterval === 0) {
           console.log(currentStep);
-          if (mapActions[currentStep]) {
-            console.log(mapActions[currentStep]);
-            for (const action of mapActions[currentStep]) {
-              actionsHandling(map.current, action.actionType, action.data);
-            }
-          }
+          // if (mapActions[currentStep]) {
+          //   console.log(mapActions[currentStep]);
+          //   for (const action of mapActions[currentStep]) {
+          //     actionsHandling(
+          //       map.current,
+          //       action.actionType,
+          //       action.data,
+          //       counter,
+          //       driverRoutes
+          //     );
+          //   }
+          // }
         }
 
         if (counter < totalSteps - 1) {
