@@ -28,10 +28,19 @@ export const mapActions = {
       },
     },
     {
+      actionType: ActionType.passengerAppear,
+      data: {
+        passengerid: 1,
+        passengerCoordinates: [114.1694, 22.3193],
+        range: 900,
+      },
+    },
+    {
       actionType: ActionType.orderReceived,
       data: {
         passengerid: 1,
         driverid: 0,
+        pickUpTime: 17,
       },
     },
   ],
@@ -41,6 +50,15 @@ export const mapActions = {
       data: {
         passengerid: 1,
         driverid: 0,
+      },
+    },
+  ],
+  20: [
+    {
+      actionType: ActionType.dropOff,
+      data: {
+        driverid: 0,
+        passengerid: 1,
       },
     },
   ],
