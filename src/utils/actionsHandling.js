@@ -11,29 +11,34 @@ export const actionsHandling = (
   currentTime,
   driverRoutes
 ) => {
+  console.log(actionType, data);
   switch (actionType) {
     case ActionType.passengerAppear:
-      console.log(actionType, data);
-      passengerAppear(map, data);
+      for (let i = 0; i < data.length; i++) {
+        passengerAppear(map, data[i]);
+      }
       break;
     case ActionType.rangeUpdate:
-      console.log(actionType, data);
-      rangeUpdate(map, data);
+      for (let i = 0; i < data.length; i++) {
+        rangeUpdate(map, data[i]);
+      }
       break;
     case ActionType.orderReceived:
-      orderReceived(map, data, currentTime, driverRoutes);
+      for (let i = 0; i < data.length; i++) {
+        orderReceived(map, data[i], currentTime, driverRoutes);
+      }
       break;
     case ActionType.pickUp:
-      pickUp(map, data);
+      for (let i = 0; i < data.length; i++) pickUp(map, data[i]);
       break;
     case ActionType.dropOff:
-      dropOff(map, data);
+      for (let i = 0; i < data.length; i++) dropOff(map, data[i]);
       break;
     case ActionType.cancel:
-      cancel(map, data);
+      for (let i = 0; i < data.length; i++) cancel(map, data[i]);
       break;
     default:
-      console.error("No such action type");
+      console.error("No such action type ", actionType);
   }
 };
 
@@ -47,15 +52,12 @@ function passengerAppear(map, data) {
     };
   */
   const passenger = data;
+  cancel(map, data);
   const { imageName, sourceName, layerName } = passengerNaming(
     passenger.passengerid
   );
 
-  if (map.getLayer(layerName)) map.removeLayer(layerName);
-  if (map.getSource(sourceName)) map.removeSource(sourceName);
-  if (map.hasImage(imageName)) map.removeImage(imageName);
-
-  map.addImage(imageName, createPulsingDot(passenger.range, map), {
+  map.addImage(imageName, createPulsingDot(passenger.range * 1000, map), {
     pixelRatio: 2,
   });
 
@@ -131,14 +133,14 @@ function cancel(map, data) {
    * data format: 
    * {
       passengerid: 1,
-      driverid: 17,
     };
   */
-  const { driverPickingUpRouteSourceName, driverPickingUpRouteLayerName } =
-    driverNaming(data.driverid);
-  updateDriverStatus(map, data.driverid, DriverStatus.idle);
-  map.removeSource(driverPickingUpRouteSourceName);
-  map.removeLayer(driverPickingUpRouteLayerName);
+  const { imageName, sourceName, layerName } = passengerNaming(
+    data.passengerid
+  );
+  if (map.getLayer(layerName)) map.removeLayer(layerName);
+  if (map.getSource(sourceName)) map.removeSource(sourceName);
+  if (map.hasImage(imageName)) map.removeImage(imageName);
 }
 
 function orderReceived(map, data, currentTime, driverRoutes) {
