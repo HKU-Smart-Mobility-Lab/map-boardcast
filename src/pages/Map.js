@@ -9,8 +9,8 @@ import { drivers } from "../data/driver_route";
 import { importImage } from "../images/images";
 import { appConfig, mapConfig } from "../config";
 import { segmentMultiLineString } from "../utils/calculate";
-import { mapActions } from "../data/actions";
-// import { actions as mapActions } from "../data/actions_list";
+// import { mapActions } from "../data/actions";
+import { actions as mapActions } from "../data/actions_list";
 import { actionsHandling } from "../utils/actionsHandling";
 import { driverNaming } from "../utils/naming";
 import { DriverStatus } from "../utils/driversHandling";
@@ -25,13 +25,13 @@ export default function MapGL() {
   const mapContainer = useRef(null);
   const tooltipRef = useRef(null);
   const map = useRef(null);
-  const [lng, setLng] = useState(114.1694);
-  const [lat, setLat] = useState(22.3193);
-  const [zoom, setZoom] = useState(15);
+  const [lng, setLng] = useState(mapConfig.startingLontitude);
+  const [lat, setLat] = useState(mapConfig.startingLatitude);
+  const [zoom, setZoom] = useState(mapConfig.zoomingLevel);
   const driverLocations = new Map();
   const driverRoutes = new Map();
-  const pickUpRoutes = new Map();
-  let totalSteps =
+  const totalSteps = drivers[0].route.length;
+  let totalTimeIntervals =
     (drivers[0].route.length - 1) * mapConfig.carMovingStepsPerTimeInterval;
 
   // Map set up
@@ -59,12 +59,7 @@ export default function MapGL() {
     for (let i = 0; i < drivers.length; i++) {
       const driver = drivers[i];
       const originalCoordinates = driver.route[0];
-      const {
-        driverSourceName,
-        driverLayerName,
-        driverPickingUpRouteLayerName,
-        driverPickingUpRouteSourceName,
-      } = driverNaming(driver.id);
+      const { driverSourceName, driverLayerName } = driverNaming(driver.id);
 
       driverRoutes[driver.id] = {
         type: "FeatureCollection",
@@ -136,19 +131,6 @@ export default function MapGL() {
           driverLocations[driver.id].features[0].geometry.coordinates =
             driverRoutes[driver.id].features[0].geometry.coordinates[counter];
 
-          driverLocations[driver.id].features[0].properties.bearing =
-            turf.bearing(
-              turf.point(
-                driverRoutes[driver.id].features[0].geometry.coordinates[
-                  counter >= totalSteps ? counter - 1 : counter
-                ]
-              ),
-              turf.point(
-                driverRoutes[driver.id].features[0].geometry.coordinates[
-                  counter >= totalSteps ? counter : counter + 1
-                ]
-              )
-            );
           const { driverSourceName, driverPickingUpRouteSourceName } =
             driverNaming(driver.id);
 
@@ -171,22 +153,68 @@ export default function MapGL() {
           counter / mapConfig.carMovingStepsPerTimeInterval
         );
         if (counter % mapConfig.carMovingStepsPerTimeInterval === 0) {
-          console.log(currentStep);
-          // if (mapActions[currentStep]) {
-          //   console.log(mapActions[currentStep]);
-          //   for (const action of mapActions[currentStep]) {
-          //     actionsHandling(
-          //       map.current,
-          //       action.actionType,
-          //       action.data,
-          //       counter,
-          //       driverRoutes
-          //     );
-          //   }
-          // }
+          console.log(`${currentStep} / ${totalSteps}`);
+
+          for (let i = 0; i < drivers.length; i++) {
+            const driver = drivers[i];
+            if (
+              driverRoutes[driver.id].features[0].geometry.coordinates[
+                counter
+              ][0] ===
+                driverRoutes[driver.id].features[0].geometry.coordinates[
+                  counter + 1
+                ][0] &&
+              driverRoutes[driver.id].features[0].geometry.coordinates[
+                counter
+              ][1] ===
+                driverRoutes[driver.id].features[0].geometry.coordinates[
+                  counter + 1
+                ][1]
+            )
+              continue;
+            driverLocations[driver.id].features[0].properties.bearing =
+              turf.bearing(
+                turf.point(
+                  driverRoutes[driver.id].features[0].geometry.coordinates[
+                    counter >= totalTimeIntervals ? counter - 1 : counter
+                  ]
+                ),
+                turf.point(
+                  driverRoutes[driver.id].features[0].geometry.coordinates[
+                    counter >= totalTimeIntervals ? counter : counter + 1
+                  ]
+                )
+              );
+            driverLocations[driver.id].features[0].properties.bearing =
+              turf.bearing(
+                turf.point(
+                  driverRoutes[driver.id].features[0].geometry.coordinates[
+                    counter >= totalTimeIntervals ? counter - 1 : counter
+                  ]
+                ),
+                turf.point(
+                  driverRoutes[driver.id].features[0].geometry.coordinates[
+                    counter >= totalTimeIntervals ? counter : counter + 1
+                  ]
+                )
+              );
+          }
+
+          if (mapActions[currentStep * 5]) {
+            console.log(mapActions[currentStep * 5]);
+            for (const action of mapActions[currentStep * 5]) {
+              actionsHandling(
+                map.current,
+                action.actionType,
+                action.data,
+                counter,
+                driverRoutes
+              );
+            }
+          }
         }
 
-        if (counter < totalSteps - 1) {
+        if (counter < totalTimeIntervals - 1) {
           requestAnimationFrame(animate);
         }
         counter = counter + 1;
