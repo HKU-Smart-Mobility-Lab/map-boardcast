@@ -124,8 +124,8 @@ function dropOff(map, data) {
   const { driverPickingUpRouteSourceName, driverPickingUpRouteLayerName } =
     driverNaming(data.driverid);
   updateDriverStatus(map, data.driverid, DriverStatus.idle);
-  map.removeSource(driverPickingUpRouteSourceName);
   map.removeLayer(driverPickingUpRouteLayerName);
+  map.removeSource(driverPickingUpRouteSourceName);
 }
 
 function cancel(map, data) {

@@ -47,5 +47,3 @@ export const createPulsingDot = (size, map) => {
     },
   };
 };
-
-export const updateDriverStatus = (map, driverid, newStatus) => {};
