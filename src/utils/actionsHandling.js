@@ -1,8 +1,16 @@
-import { ActionType } from "../data/actions";
 import { createPulsingDot } from "./passengersHandling";
 import { driverNaming, passengerNaming } from "./naming";
 import { DriverStatus, updateDriverStatus } from "./driversHandling";
 import { mapConfig } from "../config";
+
+export const ActionType = {
+  passengerAppear: "passengerAppearAction",
+  rangeUpdate: "rangeUpdateAction",
+  orderReceived: "orderReceivedAction",
+  pickUp: "pickUpAction",
+  dropOff: "dropOffAction",
+  cancel: "cancelAction",
+};
 
 export const actionsHandling = (
   map,
