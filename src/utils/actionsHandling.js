@@ -129,9 +129,9 @@ function dropOff(map, data) {
       driverid: 17,
     };
   */
+  updateDriverStatus(map, data.driverid, DriverStatus.idle);
   const { driverPickingUpRouteSourceName, driverPickingUpRouteLayerName } =
     driverNaming(data.driverid);
-  updateDriverStatus(map, data.driverid, DriverStatus.idle);
   map.removeLayer(driverPickingUpRouteLayerName);
   map.removeSource(driverPickingUpRouteSourceName);
 }
@@ -163,10 +163,17 @@ function orderReceived(map, data, currentTime, driverRoutes) {
   const { driverPickingUpRouteSourceName, driverPickingUpRouteLayerName } =
     driverNaming(data.driverid);
   const startIndex = currentTime;
-  const endIndex = data.pickUpTime;
+  const endIndex =
+    (data.pickUpTime * mapConfig.carMovingStepsPerTimeInterval) /
+    mapConfig.timeInterval;
+
+  if (endIndex < startIndex) {
+    console.error("Pick-up time is before current time");
+    return;
+  }
 
   const arc = driverRoutes[data.driverid].features[0].geometry.coordinates
-    .slice(startIndex, endIndex * mapConfig.carMovingStepsPerTimeInterval)
+    .slice(startIndex, parseInt(endIndex))
     .reverse();
 
   const _pickUpRoute = {

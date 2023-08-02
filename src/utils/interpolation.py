@@ -4,7 +4,7 @@ import json
 import polyline
 
 # Your Mapbox access token
-mapbox_access_token = "pk.eyJ1IjoibWF0dGp3YW5nIiwiYSI6ImNsaXB5NDN1cTAzMnAza28xaG54ZWRrMzgifQ.cUju1vqjuW7XmAuO2iEZmg";
+mapbox_access_token = "pk.eyJ1IjoibWF0dGp3YW5nIiwiYSI6ImNsaXB5NDN1cTAzMnAza28xaG54ZWRrMzgifQ.cUju1vqjuW7XmAuO2iEZmg"
 
 
 start = [114.2119, 22.2828] 
