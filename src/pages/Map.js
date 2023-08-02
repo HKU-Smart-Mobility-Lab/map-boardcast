@@ -5,12 +5,12 @@ import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-load
 import "mapbox-gl/dist/mapbox-gl.css";
 import * as turf from "@turf/turf";
 // import { drivers } from "../data/drivers";
-import { drivers } from "../data/driver_route";
+// import { mapActions } from "../data/actions";
+import { drivers } from "../data/driver_routes";
+import { actions as mapActions } from "../data/actions_list";
 import { importImage } from "../images/images";
 import { appConfig, mapConfig } from "../config";
 import { segmentMultiLineString } from "../utils/calculate";
-// import { mapActions } from "../data/actions";
-import { actions as mapActions } from "../data/actions_list";
 import { actionsHandling } from "../utils/actionsHandling";
 import { driverNaming } from "../utils/naming";
 import { DriverStatus } from "../utils/driversHandling";
@@ -200,9 +200,11 @@ export default function MapGL() {
               );
           }
 
-          if (mapActions[currentStep * 5]) {
-            console.log(mapActions[currentStep * 5]);
-            for (const action of mapActions[currentStep * 5]) {
+          if (mapActions[currentStep * mapConfig.timeInterval]) {
+            console.log(mapActions[currentStep * mapConfig.timeInterval]);
+            for (const action of mapActions[
+              currentStep * mapConfig.timeInterval
+            ]) {
               actionsHandling(
                 map.current,
                 action.actionType,

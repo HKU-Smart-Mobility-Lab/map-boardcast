@@ -5,6 +5,7 @@ export const appConfig = {
 
 export const mapConfig = {
   carMovingStepsPerTimeInterval: 5,
+  timeInterval: 5,
   startingLontitude: 114.1686,
   startingLatitude: 22.28,
   zoomingLevel: 15,
