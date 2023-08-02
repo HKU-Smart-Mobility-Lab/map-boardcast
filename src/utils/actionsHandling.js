@@ -120,6 +120,17 @@ function pickUp(map, data) {
   const passengerLayerName = passengerNaming(data.passengerid).layerName;
   map.removeLayer(passengerLayerName);
   updateDriverStatus(map, data.driverid, DriverStatus.drivingToDropoff);
+  const { driverPickingUpRouteSourceName, driverPickingUpRouteLayerName } =
+    driverNaming(data.driverid);
+  if (
+    map.getLayer(driverPickingUpRouteLayerName) &&
+    map.getSource(driverPickingUpRouteSourceName)
+  ) {
+    map.removeLayer(driverPickingUpRouteLayerName);
+    map.removeSource(driverPickingUpRouteSourceName);
+  } else {
+    console.log("no such driving route when pick up");
+  }
 }
 
 function dropOff(map, data) {
@@ -130,10 +141,6 @@ function dropOff(map, data) {
     };
   */
   updateDriverStatus(map, data.driverid, DriverStatus.idle);
-  const { driverPickingUpRouteSourceName, driverPickingUpRouteLayerName } =
-    driverNaming(data.driverid);
-  map.removeLayer(driverPickingUpRouteLayerName);
-  map.removeSource(driverPickingUpRouteSourceName);
 }
 
 function cancel(map, data) {

@@ -4,9 +4,12 @@ import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 import "mapbox-gl/dist/mapbox-gl.css";
 import * as turf from "@turf/turf";
+// test data
 // import { drivers } from "../data/drivers";
 // import { mapActions } from "../data/actions";
-import { drivers } from "../data/driver_routes";
+// test data end
+
+import { drivers } from "../data/driver_route";
 import { actions as mapActions } from "../data/actions_list";
 import { importImage } from "../images/images";
 import { appConfig, mapConfig } from "../config";
