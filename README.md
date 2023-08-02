@@ -106,10 +106,12 @@ export const drivers = [
 
 ### About the configuration params
 
-To be done
+`carMovingStepsPerTimeInterval`: This parameter defines the number of interpolation between two steps.
 
-## Acknowledgments
+`timeInterval`: This parameter defines the duration of each time interval in the simulation, measured in seconds. The default value is 5,
 
-This project is an initiative of the Smart Mobility Lab at The University of Hong Kong (HKU), under the guidance and leadership of Dr. KE. The team is grateful for the support and resources provided by HKU.
+`startingLongitude`: This parameter sets the starting longitude for the map visualization. The default value is 114.1686, which corresponds to a location in Hong Kong Island. You can change this to the longitude of any location you want to focus your simulation on.
 
-_Please refer to the `README.md` and the documentation within the repository for further information on how to install, configure, and use this tool._
+`startingLatitude`: Similar to startingLongitude, this parameter sets the starting latitude for the map visualization. The default value is 22.28, which also corresponds to a location in Hong Kong Island. Modify this to change the latitude of your simulation's focus area.
+
+`zoomingLevel`: This parameter controls the initial zoom level of the map in the visualization. The default value is 15, which represents a fairly close view (street level) of the map. Increase this value to zoom in further, or decrease it to zoom out and see a larger area.
