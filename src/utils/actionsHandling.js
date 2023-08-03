@@ -17,13 +17,14 @@ export const actionsHandling = (
   actionType,
   data,
   currentTime,
-  driverRoutes
+  driverRoutes,
+  setSelectedPassenger
 ) => {
   console.log(actionType, data);
   switch (actionType) {
     case ActionType.passengerAppear:
       for (let i = 0; i < data.length; i++) {
-        passengerAppear(map, data[i]);
+        passengerAppear(map, data[i], setSelectedPassenger);
       }
       break;
     case ActionType.rangeUpdate:
@@ -50,7 +51,7 @@ export const actionsHandling = (
   }
 };
 
-function passengerAppear(map, data) {
+function passengerAppear(map, data, setSelectedPassenger) {
   /*
    * data format: 
    * {
@@ -92,6 +93,10 @@ function passengerAppear(map, data) {
     layout: {
       "icon-image": imageName,
     },
+  });
+
+  map.on("click", layerName, function (e) {
+    setSelectedPassenger(passenger.passengerid);
   });
 }
 
@@ -171,7 +176,7 @@ function orderReceived(map, data, currentTime, driverRoutes) {
     driverNaming(data.driverid);
   const startIndex = currentTime;
   const endIndex =
-    (data.pickUpTime * mapConfig.carMovingStepsPerTimeInterval) /
+    (parseInt(data.pickUpTime) * mapConfig.carMovingStepsPerTimeInterval) /
     mapConfig.timeInterval;
 
   if (endIndex < startIndex) {

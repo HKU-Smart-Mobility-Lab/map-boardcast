@@ -30,6 +30,8 @@ export default function MapGL() {
   const map = useRef(null);
   const [lng, setLng] = useState(mapConfig.startingLontitude);
   const [lat, setLat] = useState(mapConfig.startingLatitude);
+  const [selectedPassenger, setSelectedPassenger] = useState(null);
+  const [selectedDriver, setSelectedDriver] = useState(null);
   const [zoom, setZoom] = useState(mapConfig.zoomingLevel);
   const driverLocations = new Map();
   const driverRoutes = new Map();
@@ -113,6 +115,10 @@ export default function MapGL() {
           "icon-allow-overlap": true,
           "icon-ignore-placement": true,
         },
+      });
+
+      map.current.on("click", driverLayerName, (e) => {
+        setSelectedDriver(driver.id);
       });
     }
   };
@@ -213,7 +219,8 @@ export default function MapGL() {
                 action.actionType,
                 action.data,
                 counter,
-                driverRoutes
+                driverRoutes,
+                setSelectedPassenger
               );
             }
           }
@@ -231,7 +238,8 @@ export default function MapGL() {
   return (
     <div className="w-screen h-screen">
       <div className="fixed top-0 left-0 right-0 bg-slate-600 z-10">
-        Longitude: {lng} | Latitude: {lat} | Zoom: {zoom} | Hong Kong
+        Longitude: {lng} | Latitude: {lat} | Zoom: {zoom} | Hong Kong | current
+        driver {selectedDriver} | current passenger {selectedPassenger}
       </div>
       <div
         ref={tooltipRef}
