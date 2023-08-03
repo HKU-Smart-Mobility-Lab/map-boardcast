@@ -110,6 +110,7 @@ function rangeUpdate(map, data) {
     };
   */
   const passengerLayerName = passengerNaming(data.passengerid).layerName;
+  map.off("click", passengerLayerName);
   map.removeLayer(passengerLayerName);
   passengerAppear(map, data);
 }
@@ -123,6 +124,7 @@ function pickUp(map, data) {
     };
   */
   const passengerLayerName = passengerNaming(data.passengerid).layerName;
+  map.off("click", passengerLayerName);
   map.removeLayer(passengerLayerName);
   updateDriverStatus(map, data.driverid, DriverStatus.drivingToDropoff);
   const { driverPickingUpRouteSourceName, driverPickingUpRouteLayerName } =
@@ -158,6 +160,7 @@ function cancel(map, data) {
   const { imageName, sourceName, layerName } = passengerNaming(
     data.passengerid
   );
+  map.off("click", layerName);
   if (map.getLayer(layerName)) map.removeLayer(layerName);
   if (map.getSource(sourceName)) map.removeSource(sourceName);
   if (map.hasImage(imageName)) map.removeImage(imageName);
