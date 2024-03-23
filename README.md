@@ -14,6 +14,7 @@ We welcome contributions and feedback to further improve this tool and broaden i
 
 ## Citation
 If you use any part of this repo, you are highly encouraged to cite our paper:
+
 Chen, T., Shen, Z., Feng, S., Yang, L., & Ke, J. (2023). Dynamic Adjustment of Matching Radii under the Broadcasting Mode: A Novel Multitask Learning Strategy and Temporal Modeling Approach. arXiv preprint arXiv:2312.05576.
 
 ## Getting Started with this Project
