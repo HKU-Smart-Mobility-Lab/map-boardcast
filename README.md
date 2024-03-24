@@ -2,6 +2,8 @@
 
 This repository contains a versatile and interactive visualization tool developed by the Smart Mobility Lab at The University of Hong Kong (HKU), under the direction of Dr. KE Jingtao. The primary aim of this project is to provide a customizable visualization of a driver-order matching broadcasting algorithm. It is designed to emulate and illustrate scenarios akin to ride-hailing services like Uber.
 
+![Demo Image](./public/static/demo.jpeg)
+
 ## Features
 
 The visualization tool showcases a detailed simulation of around 200 drivers and approximately 1000 order requests within the Hong Kong Island area. Users are empowered to configure their own data sets, allowing for extensive adaptability and customization based on individual requirements.
@@ -19,7 +21,7 @@ Chen, T., Shen, Z., Feng, S., Yang, L., & Ke, J. (2023). Dynamic Adjustment of M
 
 ## Getting Started with this Project
 
-### Install all the dependencies
+### 1.Install all the dependencies
 
 At the root path of the project,
 
@@ -32,14 +34,14 @@ At the root path of the project,
 - Should there be any problems, delete `package-lock.json`, and re-install
 
 
-### Replace Mapbox token
+### 2.Replace Mapbox token
 
 You should include your Mapbox token in `.env` file
 
 To obtain a token, you can find more information in the [Mapbox official documentation](https://docs.mapbox.com/help/getting-started/access-tokens/). The service is free for use on a personal scale.
 
 
-### How to add your own data
+### 3.Add your own data
 
 All the data are stored under `src/data/`.
 please name the driver and actions data as driver_route.js and actions_list.js.
@@ -50,11 +52,16 @@ Note that driver_route.js should follow the format below
 export const drivers = [
   {
     id: 160,
-    route: []
+    route: [
+      [114.1802652, 22.2632329],
+      [114.1802652, 22.2632329],
       ...
+      ]
   },{
-
+    id: 200,
+    route: []
   }
+  ...
 ]
 ```
 
@@ -62,8 +69,37 @@ While actions_list.js should be
 
 ```js
 export const actions = {
-  5: [],
-  10: []
+  0: [],
+  5: [
+    {
+      actionType: "passengerAppearAction",
+      data: [
+        {
+          passengerid: 34,
+          passengerCoordinates: [114.1721163, 22.2819746],
+          range: 0.1,
+        },
+        {
+          passengerid: 25,
+          passengerCoordinates: [114.1553063, 22.2499421],
+          range: 0.1,
+        },
+        ...
+      ],
+    },
+  ],
+  10: [],
+  15: [],
+  20: [
+    {
+      actionType: "cancelAction",
+      data: [
+        {
+          passengerid: 111,
+        },
+      ],
+    },
+  ],
   ...
 }
 ```
@@ -100,23 +136,7 @@ const dropOffAction = {
 
 const cancelAction = {
   passengerid: 1,
-  driverid: 17, // not using driverid yet
 };
-```
-
-drivers:
-
-```js
-export const drivers = [
-  {
-    id: 0,
-    route: [[114.1587, 22.3072], ...[114.1704, 22.3233]],
-  },
-  {
-    id: 1,
-    route: [[114.1611, 22.3188], ...[114.1549, 22.3148]],
-  },
-];
 ```
 
 ### About the configuration params
