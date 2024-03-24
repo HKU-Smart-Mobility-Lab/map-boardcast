@@ -19,6 +19,8 @@ Chen, T., Shen, Z., Feng, S., Yang, L., & Ke, J. (2023). Dynamic Adjustment of M
 
 ## Getting Started with this Project
 
+### Install all the dependencies
+
 At the root path of the project,
 
 `npm install`
@@ -28,6 +30,14 @@ At the root path of the project,
 
 - Note that the default port is set as 3001, which can be altered in .env
 - Should there be any problems, delete `package-lock.json`, and re-install
+
+
+### Replace Mapbox token
+
+You should include your Mapbox token in `.env` file
+
+To obtain a token, you can find more information in the [Mapbox official documentation](https://docs.mapbox.com/help/getting-started/access-tokens/). The service is free for use on a personal scale.
+
 
 ### How to add your own data
 
